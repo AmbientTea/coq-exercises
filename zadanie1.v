@@ -72,9 +72,11 @@ end.
    what it means for a command to run to a value under a
    particular variable assignment. The value of a command
    is the result of evaluating its final expression. *)
-Definition env_add (a : assign) (v : var) (l : val) (x : var) :=
-    if eq_nat_dec x v then l else a x
-.
+Definition env_add (a : assign) (v : var) (vl : val) (x : var) :=
+match nat_compare v x with
+| Eq => vl
+| _  => a x
+end.
 
 Fixpoint run (c : cmd) (a : assign) (v : val) : Prop :=
 match c with
@@ -113,9 +115,11 @@ match v with
        exists t1 t2, typeV v1 t1 /\ typeV v2 t2 /\ tp = TupleT t1 t2
 end.
 
-Definition type_add (t : typing) (v : var) (tp : type) : typing :=
-    fun x => if eq_nat_dec x v then tp else t x
-.
+Definition type_add (t : typing) (v : var) (tp : type) (x : var) :=
+match nat_compare v x with
+| Eq => tp
+| _  => t x
+end.
 
 Fixpoint typeC (c : cmd) (t : typing) (tp : type) : Prop :=
 match c with
@@ -236,11 +240,31 @@ intros.
 intro.
 compare x v.
 + intros.
-  rewrite e0; clear e0.
-  admit.
+  apply nat_compare_eq_iff in e0.
+  assert (env_add a x vl v = vl /\ type_add t x tp v = tp).
+  compute.
+  compute in e0.
+  rewrite e0; split; auto.
+  destruct H2.
+  rewrite H2; rewrite H3; auto.
 
 + intros.
-  admit.
+  apply not_eq in n.
+  assert (env_add a x vl v = a v /\ type_add t x tp v = t v).
+  destruct n.
+
+  apply nat_compare_lt in H2.
+  compute in H2.
+  compute.
+  rewrite H2; clear H2; split; trivial.
+  
+  apply nat_compare_gt in H2.
+  compute in H2.
+  compute.
+  rewrite H2; clear H2; split; trivial.
+  
+  destruct H2.
+  rewrite H2; rewrite H3; apply H.
 Qed.
 
 
