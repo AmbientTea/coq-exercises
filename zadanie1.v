@@ -72,8 +72,8 @@ end.
    what it means for a command to run to a value under a
    particular variable assignment. The value of a command
    is the result of evaluating its final expression. *)
-Definition env_add (a : assign) (v : var) (l : val) : assign:=
-    fun x => if eq_nat_dec x v then l else a x
+Definition env_add (a : assign) (v : var) (l : val) (x : var) :=
+    if eq_nat_dec x v then l else a x
 .
 
 Fixpoint run (c : cmd) (a : assign) (v : val) : Prop :=
@@ -229,7 +229,19 @@ Qed.
    under variable assignment va to some value that also has type t in vt,
    as long as va and vt agree.  *)
 
+Lemma add_safe : forall e t a tp vl, varsType a t ->
+      eval e a vl -> typeV vl tp -> forall x,
+      varsType (env_add a x vl) (type_add t x tp).
+intros.
+intro.
+compare x v.
++ intros.
+  rewrite e0; clear e0.
+  admit.
 
++ intros.
+  admit.
+Qed.
 
 
 Theorem cmd_types :  forall (tp : type) (vl : val) (c : cmd),
@@ -251,12 +263,36 @@ induction c.
   repeat destruct H1.
   
   apply IHc with (vt := type_add vt v x) (va := env_add va v x0).
-  intro.
-  (* apply type_add_safe with (e := e); auto. *)
+  apply add_safe with (e := e); auto.
+  apply well_typed with (vt := vt) (va := va) (e := e); auto.
   auto.
 Qed.
 
+(*
+(a) One easy way of defining variable assignments and typings
+    is to define both as instances of a polymorphic map type.
+    The map type at parameter T can be defined to be the type
+    of arbitrary functions from variables to T. A helpful
+    function for implementing insertion into such a functional
+    map is eq_nat_dec, which you can make available with
+    
+    Require Import Arith.
+    
+    eq_nat_dec has a dependent type that tells you that it
+    makes accurate decisions on whether two natural numbers
+    are equal, but you can use it as if it returned a boolean, e.g.,
+    if eq_nat_dec n m then E1 else E2.
 
+(b) If you follow the last hint, you may find yourself writing a
+    proof that involves an expression with eq_nat_dec that you
+    would like to simplify. Running destruct on the particular
+    call to eq_nat_dec should do the trick. You can automate
+    this advice with a piece of Ltac:
+    
+    match goal with
+    | [ ` context[eq_nat_dec ?X ?Y ] ] ⇒ destruct (eq_nat_dec X Y )
+    end
+*)
 
 
 
