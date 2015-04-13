@@ -114,7 +114,7 @@ match v with
 end.
 
 Definition type_add (t : typing) (v : var) (tp : type) : typing :=
-    t (* fun x => if eq_nat_dec x v then tp else t x *)
+    fun x => if eq_nat_dec x v then tp else t x
 .
 
 Fixpoint typeC (c : cmd) (t : typing) (tp : type) : Prop :=
